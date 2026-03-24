@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aprende Português 🇵🇹</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #faf9f6; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    button { font-family: inherit; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useEffect, useCallback, useMemo } = React;
+
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+const LESSONS = [
+  {
+    id: "greetings",
+    title: "Cumprimentos",
+    subtitle: "Greetings & Basics",
+    icon: "👋",
+    phrases: [
+      {
+        pt: "Olá",
+        en: "Hello",
+        es: "Hola",
+        pronun: "oh-LAH",
+        note: "Almost identical to Spanish — just swap the H for an O!",
+      },
+      {
+        pt: "Bom dia",
+        en: "Good morning",
+        es: "Buenos días",
+        pronun: "bom DEE-ah",
+        note: "Same structure as Spanish. 'Bom' = 'Bueno', 'dia' = 'día'.",
+      },
+      {
+        pt: "Boa tarde",
+        en: "Good afternoon",
+        es: "Buenas tardes",
+        pronun: "BOH-ah TAR-deh",
+        note: "'Tarde' is the same word! Just 'buenas' → 'boa'.",
+      },
+      {
+        pt: "Boa noite",
+        en: "Good evening / Good night",
+        es: "Buenas noches",
+        pronun: "BOH-ah NOY-teh",
+        note: "'Noite' sounds like 'noche' — the 'ch' becomes a 't'.",
+      },
+      {
+        pt: "Obrigado / Obrigada",
+        en: "Thank you (m/f)",
+        es: "Gracias",
+        pronun: "oh-bree-GAH-doo / oh-bree-GAH-dah",
+        note: "Changes based on YOUR gender, not who you're thanking. Sam says 'obrigado', Susanna & Mara say 'obrigada'.",
+      },
+      {
+        pt: "Por favor",
+        en: "Please",
+        es: "Por favor",
+        pronun: "por fah-VOR",
+        note: "Identical to Spanish! 🎉",
+      },
+      {
+        pt: "De nada",
+        en: "You're welcome",
+        es: "De nada",
+        pronun: "deh NAH-dah",
+        note: "Also identical to Spanish!",
+      },
+      {
+        pt: "Com licença",
+        en: "Excuse me",
+        es: "Con permiso",
+        pronun: "kom lee-SEN-sah",
+        note: "'Licença' comes from the same Latin root as 'licencia'.",
+      },
+      {
+        pt: "Desculpe",
+        en: "Sorry",
+        es: "Disculpe",
+        pronun: "desh-KOOL-peh",
+        note: "Nearly the same as Spanish 'disculpe' — the 'i' becomes 'e'.",
+      },
+      {
+        pt: "Tchau",
+        en: "Bye",
+        es: "Chao",
+        pronun: "CHOW",
+        note: "Same as the Spanish 'chao' — borrowed from Italian 'ciao'.",
+      },
+    ],
+  },
+  {
+    id: "restaurant",
+    title: "No Restaurante",
+    subtitle: "At the Restaurant",
+    icon: "🍽️",
+    phrases: [
+      {
+        pt: "Uma mesa para três, por favor",
+        en: "A table for three, please",
+        es: "Una mesa para tres, por favor",
+        pronun: "OO-mah MEH-zah PAH-rah tresh, por fah-VOR",
+        note: "'Mesa' and 'para' are the same! 'Três' is like 'tres' with a nasal sound.",
+      },
+      {
+        pt: "A ementa, por favor",
+        en: "The menu, please",
+        es: "El menú, por favor",
+        pronun: "ah eh-MEN-tah, por fah-VOR",
+        note: "In Portugal they say 'ementa' (in Brazil it's 'cardápio'). Different from Spanish 'menú'.",
+      },
+      {
+        pt: "Eu queria...",
+        en: "I would like...",
+        es: "Yo querría...",
+        pronun: "EH-oo keh-REE-ah",
+        note: "From 'querer' — same verb as Spanish! Portuguese uses the simple past as a polite form.",
+      },
+      {
+        pt: "A conta, por favor",
+        en: "The bill, please",
+        es: "La cuenta, por favor",
+        pronun: "ah KON-tah, por fah-VOR",
+        note: "'Conta' = 'cuenta'. The 'ue' in Spanish often becomes just 'o' in Portuguese.",
+      },
+      {
+        pt: "Água, por favor",
+        en: "Water, please",
+        es: "Agua, por favor",
+        pronun: "AH-gwah, por fah-VOR",
+        note: "Same word! Portuguese just adds an accent.",
+      },
+      {
+        pt: "Um café",
+        en: "A coffee",
+        es: "Un café",
+        pronun: "oom kah-FEH",
+        note: "Same as Spanish. In Lisbon, ask for 'uma bica' for an espresso!",
+      },
+      {
+        pt: "Está delicioso!",
+        en: "It's delicious!",
+        es: "¡Está delicioso!",
+        pronun: "esh-TAH deh-lee-see-OH-zoo",
+        note: "Identical structure to Spanish!",
+      },
+      {
+        pt: "Sem carne, por favor",
+        en: "Without meat, please",
+        es: "Sin carne, por favor",
+        pronun: "saym KAR-neh, por fah-VOR",
+        note: "'Sem' = 'sin'. 'Carne' is the same!",
+      },
+    ],
+  },
+  {
+    id: "directions",
+    title: "Direções",
+    subtitle: "Getting Around",
+    icon: "🗺️",
+    phrases: [
+      {
+        pt: "Onde fica...?",
+        en: "Where is...?",
+        es: "¿Dónde queda...?",
+        pronun: "ON-deh FEE-kah",
+        note: "'Onde' = 'donde' (just drop the 'd'). 'Fica' from 'ficar' = 'quedar'.",
+      },
+      {
+        pt: "À esquerda",
+        en: "To the left",
+        es: "A la izquierda",
+        pronun: "ah esh-KEHR-dah",
+        note: "Same Latin root as 'izquierda' — you can hear the similarity.",
+      },
+      {
+        pt: "À direita",
+        en: "To the right",
+        es: "A la derecha",
+        pronun: "ah dee-RAY-tah",
+        note: "'Direita' ↔ 'derecha' — both from Latin 'directa'.",
+      },
+      {
+        pt: "Em frente",
+        en: "Straight ahead",
+        es: "En frente",
+        pronun: "aym FREN-teh",
+        note: "Almost identical! 'Em' = 'en'.",
+      },
+      {
+        pt: "Perto / Longe",
+        en: "Near / Far",
+        es: "Cerca / Lejos",
+        pronun: "PEHR-too / LON-zheh",
+        note: "Different from Spanish here. 'Perto' is unique to Portuguese.",
+      },
+      {
+        pt: "A estação de comboio",
+        en: "The train station",
+        es: "La estación de tren",
+        pronun: "ah esh-tah-SOWNG deh kom-BOY-oo",
+        note: "'Comboio' = train in European Portuguese (Brazil says 'trem'). 'Estação' = 'estación'.",
+      },
+      {
+        pt: "Quanto custa o bilhete?",
+        en: "How much is the ticket?",
+        es: "¿Cuánto cuesta el billete?",
+        pronun: "KWAN-too KOOSH-tah oo bee-LYEH-teh",
+        note: "Nearly word-for-word the same as Spanish!",
+      },
+      {
+        pt: "Pode ajudar-me?",
+        en: "Can you help me?",
+        es: "¿Puede ayudarme?",
+        pronun: "POH-deh ah-zhoo-DAR-meh",
+        note: "'Pode' = 'puede', 'ajudar' = 'ayudar'. The 'j' is pronounced like 'zh'.",
+      },
+    ],
+  },
+  {
+    id: "shopping",
+    title: "Compras",
+    subtitle: "Shopping",
+    icon: "🛍️",
+    phrases: [
+      {
+        pt: "Quanto custa?",
+        en: "How much does it cost?",
+        es: "¿Cuánto cuesta?",
+        pronun: "KWAN-too KOOSH-tah",
+        note: "Almost identical to Spanish!",
+      },
+      {
+        pt: "É muito caro",
+        en: "It's very expensive",
+        es: "Es muy caro",
+        pronun: "eh MWEEN-too KAH-roo",
+        note: "'Muito' = 'muy/mucho'. 'Caro' is the same!",
+      },
+      {
+        pt: "Tem mais barato?",
+        en: "Do you have something cheaper?",
+        es: "¿Tiene más barato?",
+        pronun: "taym mysh bah-RAH-too",
+        note: "'Tem' = 'tiene', 'mais' = 'más', 'barato' = same!",
+      },
+      {
+        pt: "Posso pagar com cartão?",
+        en: "Can I pay by card?",
+        es: "¿Puedo pagar con tarjeta?",
+        pronun: "POH-soo pah-GAR kom kar-TOWNG",
+        note: "'Pagar' is the same! 'Cartão' = 'tarjeta' (card).",
+      },
+      {
+        pt: "Quero este / esta",
+        en: "I want this one",
+        es: "Quiero este / esta",
+        pronun: "KEH-roo ESH-teh / ESH-tah",
+        note: "'Quero' = 'quiero' (no diphthong). Demonstratives work the same way.",
+      },
+      {
+        pt: "Onde é o supermercado?",
+        en: "Where is the supermarket?",
+        es: "¿Dónde está el supermercado?",
+        pronun: "ON-deh eh oo soo-pehr-mehr-KAH-doo",
+        note: "'Supermercado' — same word!",
+      },
+    ],
+  },
+  {
+    id: "emergencies",
+    title: "Emergências",
+    subtitle: "Emergencies & Health",
+    icon: "🏥",
+    phrases: [
+      {
+        pt: "Preciso de ajuda",
+        en: "I need help",
+        es: "Necesito ayuda",
+        pronun: "preh-SEE-zoo deh ah-ZHOO-dah",
+        note: "'Preciso' = 'necesito' (from 'precisar'). 'Ajuda' = 'ayuda'.",
+      },
+      {
+        pt: "Chame a polícia",
+        en: "Call the police",
+        es: "Llame a la policía",
+        pronun: "SHAH-meh ah poh-LEE-see-ah",
+        note: "'Chame' = 'llame'. 'Polícia' = 'policía'.",
+      },
+      {
+        pt: "Onde é o hospital?",
+        en: "Where is the hospital?",
+        es: "¿Dónde está el hospital?",
+        pronun: "ON-deh eh oo osh-pee-TAL",
+        note: "'Hospital' — same word in all three languages!",
+      },
+      {
+        pt: "Não me sinto bem",
+        en: "I don't feel well",
+        es: "No me siento bien",
+        pronun: "nowng meh SEEN-too baym",
+        note: "'Sinto' = 'siento', 'bem' = 'bien'. Very close!",
+      },
+      {
+        pt: "Sou alérgico/a a...",
+        en: "I'm allergic to...",
+        es: "Soy alérgico/a a...",
+        pronun: "soh ah-LEHR-zhee-koo/kah ah",
+        note: "Nearly identical to Spanish!",
+      },
+      {
+        pt: "Dói aqui",
+        en: "It hurts here",
+        es: "Duele aquí",
+        pronun: "doy ah-KEE",
+        note: "'Dói' = 'duele', 'aqui' = 'aquí'. Same structure.",
+      },
+    ],
+  },
+  {
+    id: "social",
+    title: "Conversa",
+    subtitle: "Making Friends",
+    icon: "💬",
+    phrases: [
+      {
+        pt: "Como se chama?",
+        en: "What's your name?",
+        es: "¿Cómo se llama?",
+        pronun: "KOH-moo seh SHAH-mah",
+        note: "Same structure! 'Chamar' = 'llamar'.",
+      },
+      {
+        pt: "Chamo-me Sam",
+        en: "My name is Sam",
+        es: "Me llamo Sam",
+        pronun: "SHAH-moo-meh Sam",
+        note: "Reflexive, just like Spanish. The pronoun just moves.",
+      },
+      {
+        pt: "Sou da Irlanda",
+        en: "I'm from Ireland",
+        es: "Soy de Irlanda",
+        pronun: "soh dah eer-LAN-dah",
+        note: "'Sou' = 'soy', 'da' = 'de la'. 'Irlanda' is the same!",
+      },
+      {
+        pt: "Fala inglês?",
+        en: "Do you speak English?",
+        es: "¿Habla inglés?",
+        pronun: "FAH-lah een-GLESH",
+        note: "'Falar' = 'hablar'. The F↔H swap is one of the big Portuguese–Spanish patterns.",
+      },
+      {
+        pt: "Falo um pouco de português",
+        en: "I speak a little Portuguese",
+        es: "Hablo un poco de portugués",
+        pronun: "FAH-loo oom POH-koo deh por-too-GESH",
+        note: "Word for word the same structure as Spanish!",
+      },
+      {
+        pt: "Muito prazer",
+        en: "Nice to meet you",
+        es: "Mucho gusto",
+        pronun: "MWEEN-too prah-ZEHR",
+        note: "'Prazer' = 'placer' (pleasure). Different word choice from 'gusto' but same idea.",
+      },
+      {
+        pt: "Que bonito!",
+        en: "How beautiful!",
+        es: "¡Qué bonito!",
+        pronun: "keh boo-NEE-too",
+        note: "Identical to Spanish!",
+      },
+    ],
+  },
+  {
+    id: "numbers",
+    title: "Números",
+    subtitle: "Numbers & Time",
+    icon: "🔢",
+    phrases: [
+      {
+        pt: "Um, dois, três, quatro, cinco",
+        en: "1, 2, 3, 4, 5",
+        es: "Uno, dos, tres, cuatro, cinco",
+        pronun: "oom, doysh, tresh, KWAH-troo, SEEN-koo",
+        note: "Very similar to Spanish! 'Dois' = 'dos', 'três' = 'tres'.",
+      },
+      {
+        pt: "Seis, sete, oito, nove, dez",
+        en: "6, 7, 8, 9, 10",
+        es: "Seis, siete, ocho, nueve, diez",
+        pronun: "saysh, SEH-teh, OY-too, NOH-veh, desh",
+        note: "'Seis' is the same! 'Oito' = 'ocho', 'dez' = 'diez'.",
+      },
+      {
+        pt: "Que horas são?",
+        en: "What time is it?",
+        es: "¿Qué hora es?",
+        pronun: "keh OH-rahsh sowng",
+        note: "Same question, but Portuguese uses plural 'horas são'.",
+      },
+      {
+        pt: "São duas horas",
+        en: "It's two o'clock",
+        es: "Son las dos",
+        pronun: "sowng DOO-ahsh OH-rahsh",
+        note: "'São' = 'son'. Same structure!",
+      },
+      {
+        pt: "Hoje / Amanhã / Ontem",
+        en: "Today / Tomorrow / Yesterday",
+        es: "Hoy / Mañana / Ayer",
+        pronun: "OH-zheh / ah-mah-NYAH / ON-taym",
+        note: "'Amanhã' = 'mañana' (same root). 'Hoje' = 'hoy'.",
+      },
+    ],
+  },
+  {
+    id: "pronunciation",
+    title: "Pronúncia",
+    subtitle: "Key Pronunciation Rules",
+    icon: "🗣️",
+    phrases: [
+      {
+        pt: "ão → nasal 'owng'",
+        en: "The famous Portuguese nasal sound",
+        es: "No existe en español",
+        pronun: "Like 'owng' but through your nose",
+        note: "Try saying 'own' but let air flow through your nose at the end. Words: pão (bread), não (no), coração (heart).",
+      },
+      {
+        pt: "lh → like Spanish 'll'",
+        en: "Similar to 'ly' in 'million'",
+        es: "Como la 'll' española",
+        pronun: "LY sound",
+        note: "'Trabalho' (work) = 'trabajo'. The 'lh' and 'll' are cognates!",
+      },
+      {
+        pt: "nh → like Spanish 'ñ'",
+        en: "Like 'ny' in 'canyon'",
+        es: "Exactamente como la 'ñ'",
+        pronun: "NY sound",
+        note: "'Espanha' = 'España'. The 'nh' IS the 'ñ' — just spelled differently!",
+      },
+      {
+        pt: "j / ge / gi → 'zh' sound",
+        en: "Like the 's' in 'pleasure'",
+        es: "No la 'j' española (que es como 'h')",
+        pronun: "ZH sound (like French 'j')",
+        note: "Big difference from Spanish! 'Hoje' is 'OH-zheh', not 'OH-heh'. The Portuguese 'j' is softer.",
+      },
+      {
+        pt: "s at end of syllable → 'sh'",
+        en: "S becomes 'sh' before consonants & at word end",
+        es: "La 's' española se mantiene como 's'",
+        pronun: "SH sound",
+        note: "'Português' → 'por-too-GESH'. This is very Lisbon! It gives Portuguese its distinctive sound.",
+      },
+      {
+        pt: "r at start → strong 'h' sound",
+        en: "Initial R is like an H",
+        es: "Como la 'rr' pero más como 'h'",
+        pronun: "H sound (or guttural R)",
+        note: "'Restaurante' → 'hesh-tow-RAN-teh'. The initial 'r' sounds like English 'h'.",
+      },
+      {
+        pt: "Unstressed 'e' → often silent or 'uh'",
+        en: "Vowels get reduced when unstressed",
+        es: "En español todas las vocales suenan igual",
+        pronun: "Swallowed / very short",
+        note: "This is why Portuguese sounds 'mushier' than Spanish. Unstressed vowels almost disappear.",
+      },
+      {
+        pt: "Spanish–Portuguese pattern: ue→o, ie→e",
+        en: "Spanish diphthongs simplify in Portuguese",
+        es: "puerta→porta, fiesta→festa, bueno→bom",
+        pronun: "—",
+        note: "Golden rule: if Spanish has 'ue', Portuguese often has 'o'. If Spanish has 'ie', Portuguese often has 'e'. Puerta→porta, cuenta→conta, fiesta→festa, bien→bem.",
+      },
+    ],
+  },
+];
+
+// ─── Challenge Generator ─────────────────────────────────────────────────────
+
+function generateChallenges(lessons) {
+  const allPhrases = lessons.flatMap((l) =>
+    l.phrases
+      .filter((p) => !p.pt.includes("→") && p.pt.length < 40)
+      .map((p) => ({ ...p, lessonId: l.id, lessonTitle: l.title }))
+  );
+
+  const challengeTypes = [
+    // Type 1: Match PT to EN
+    (phrase) => {
+      const wrongs = _.sampleSize(
+        allPhrases.filter((p) => p.en !== phrase.en),
+        3
+      ).map((p) => p.en);
+      const options = _.shuffle([phrase.en, ...wrongs]);
+      return {
+        type: "match",
+        question: `What does "${phrase.pt}" mean?`,
+        options,
+        correct: phrase.en,
+        hint: `Spanish: ${phrase.es}`,
+        explanation: phrase.note,
+      };
+    },
+    // Type 2: Match EN to PT
+    (phrase) => {
+      const wrongs = _.sampleSize(
+        allPhrases.filter((p) => p.pt !== phrase.pt),
+        3
+      ).map((p) => p.pt);
+      const options = _.shuffle([phrase.pt, ...wrongs]);
+      return {
+        type: "translate",
+        question: `How do you say "${phrase.en}" in Portuguese?`,
+        options,
+        correct: phrase.pt,
+        hint: `Spanish: ${phrase.es}`,
+        explanation: phrase.note,
+      };
+    },
+    // Type 3: Pronunciation
+    (phrase) => {
+      const wrongs = _.sampleSize(
+        allPhrases.filter((p) => p.pronun !== phrase.pronun),
+        3
+      ).map((p) => p.pronun);
+      const options = _.shuffle([phrase.pronun, ...wrongs]);
+      return {
+        type: "pronunciation",
+        question: `How is "${phrase.pt}" pronounced?`,
+        options,
+        correct: phrase.pronun,
+        hint: `English: ${phrase.en}`,
+        explanation: phrase.note,
+      };
+    },
+    // Type 4: Spanish connection
+    (phrase) => {
+      const wrongs = _.sampleSize(
+        allPhrases.filter((p) => p.es !== phrase.es),
+        3
+      ).map((p) => p.es);
+      const options = _.shuffle([phrase.es, ...wrongs]);
+      return {
+        type: "spanish",
+        question: `"${phrase.pt}" in Portuguese — what's the Spanish equivalent?`,
+        options,
+        correct: phrase.es,
+        hint: `English: ${phrase.en}`,
+        explanation: phrase.note,
+      };
+    },
+  ];
+
+  const selected = _.sampleSize(allPhrases, 5);
+  return selected.map((phrase) => {
+    const typeFn = _.sample(challengeTypes);
+    return typeFn(phrase);
+  });
+}
+
+// ─── Components ──────────────────────────────────────────────────────────────
+
+const COLORS = {
+  bg: "#faf9f6",
+  card: "#ffffff",
+  primary: "#2d6a4f",
+  primaryLight: "#74c69d",
+  primaryFaint: "#edf7f0",
+  accent: "#d4a373",
+  accentLight: "#faedcd",
+  text: "#2b2b2b",
+  textLight: "#6b7280",
+  border: "#e5e7eb",
+  correct: "#059669",
+  correctBg: "#ecfdf5",
+  wrong: "#dc2626",
+  wrongBg: "#fef2f2",
+  spanish: "#7c3aed",
+  spanishBg: "#f5f3ff",
+};
+
+function PhraseCard({ phrase, index }) {
+  const [showDetails, setShowDetails] = useState(false);
+
+  return (
+    <div
+      onClick={() => setShowDetails(!showDetails)}
+      style={{
+        background: COLORS.card,
+        borderRadius: 14,
+        padding: "16px 20px",
+        marginBottom: 10,
+        cursor: "pointer",
+        border: `1px solid ${COLORS.border}`,
+        transition: "all 0.2s ease",
+        boxShadow: showDetails ? "0 4px 16px rgba(0,0,0,0.08)" : "none",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 18, fontWeight: 600, color: COLORS.primary, marginBottom: 2 }}>
+            {phrase.pt}
+          </div>
+          <div style={{ fontSize: 14, color: COLORS.textLight }}>{phrase.en}</div>
+        </div>
+        <div
+          style={{
+            background: COLORS.primaryFaint,
+            color: COLORS.primary,
+            padding: "4px 10px",
+            borderRadius: 20,
+            fontSize: 13,
+            fontWeight: 500,
+            whiteSpace: "nowrap",
+            marginLeft: 12,
+          }}
+        >
+          {phrase.pronun}
+        </div>
+      </div>
+
+      {showDetails && (
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${COLORS.border}` }}>
+          <div
+            style={{
+              background: COLORS.spanishBg,
+              borderRadius: 10,
+              padding: "10px 14px",
+              marginBottom: 10,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <span style={{ fontSize: 14 }}>🇪🇸</span>
+            <span style={{ color: COLORS.spanish, fontSize: 14, fontWeight: 500 }}>
+              {phrase.es}
+            </span>
+          </div>
+          {phrase.note && (
+            <div
+              style={{
+                background: COLORS.accentLight,
+                borderRadius: 10,
+                padding: "10px 14px",
+                fontSize: 13,
+                color: COLORS.text,
+                lineHeight: 1.5,
+              }}
+            >
+              💡 {phrase.note}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LessonView({ lesson, onBack }) {
+  return (
+    <div>
+      <button
+        onClick={onBack}
+        style={{
+          background: "none",
+          border: "none",
+          color: COLORS.primary,
+          fontSize: 15,
+          cursor: "pointer",
+          padding: "8px 0",
+          marginBottom: 12,
+          fontWeight: 500,
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+        }}
+      >
+        ← Back to lessons
+      </button>
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <div style={{ fontSize: 40, marginBottom: 4 }}>{lesson.icon}</div>
+        <h2 style={{ margin: 0, color: COLORS.text, fontSize: 24 }}>{lesson.title}</h2>
+        <p style={{ margin: "4px 0 0", color: COLORS.textLight, fontSize: 14 }}>
+          {lesson.subtitle} · Tap any phrase to expand
+        </p>
+      </div>
+      {lesson.phrases.map((phrase, i) => (
+        <PhraseCard key={i} phrase={phrase} index={i} />
+      ))}
+    </div>
+  );
+}
+
+function ChallengeView({ onBack }) {
+  const [challenges, setChallenges] = useState(() => generateChallenges(LESSONS));
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [score, setScore] = useState(0);
+  const [showResult, setShowResult] = useState(false);
+  const [streak, setStreak] = useState(0);
+
+  const current = challenges[currentIdx];
+  const isFinished = currentIdx >= challenges.length;
+
+  const handleSelect = (option) => {
+    if (selected !== null) return;
+    setSelected(option);
+    if (option === current.correct) {
+      setScore((s) => s + 1);
+      setStreak((s) => s + 1);
+    } else {
+      setStreak(0);
+    }
+    setShowResult(true);
+  };
+
+  const handleNext = () => {
+    setSelected(null);
+    setShowResult(false);
+    setCurrentIdx((i) => i + 1);
+  };
+
+  const handleRestart = () => {
+    setChallenges(generateChallenges(LESSONS));
+    setCurrentIdx(0);
+    setSelected(null);
+    setScore(0);
+    setShowResult(false);
+    setStreak(0);
+  };
+
+  if (isFinished) {
+    const percentage = Math.round((score / challenges.length) * 100);
+    const message =
+      percentage === 100
+        ? "Perfeito! You nailed every single one! 🌟"
+        : percentage >= 80
+        ? "Muito bem! Really strong work! 💪"
+        : percentage >= 60
+        ? "Bom trabalho! You're getting the hang of it! 👏"
+        : "Boa tentativa! Keep practising, you'll get there! 🌱";
+
+    return (
+      <div>
+        <button
+          onClick={onBack}
+          style={{
+            background: "none",
+            border: "none",
+            color: COLORS.primary,
+            fontSize: 15,
+            cursor: "pointer",
+            padding: "8px 0",
+            marginBottom: 12,
+            fontWeight: 500,
+          }}
+        >
+          ← Back
+        </button>
+        <div style={{ textAlign: "center", padding: "40px 20px" }}>
+          <div style={{ fontSize: 60, marginBottom: 16 }}>
+            {percentage === 100 ? "🏆" : percentage >= 60 ? "⭐" : "📚"}
+          </div>
+          <h2 style={{ color: COLORS.text, margin: "0 0 8px", fontSize: 28 }}>
+            {score} / {challenges.length}
+          </h2>
+          <p style={{ color: COLORS.textLight, fontSize: 16, margin: "0 0 24px" }}>{message}</p>
+          <button
+            onClick={handleRestart}
+            style={{
+              background: COLORS.primary,
+              color: "white",
+              border: "none",
+              borderRadius: 12,
+              padding: "14px 32px",
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            New Challenge Round 🔄
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const typeLabel = {
+    match: "🇵🇹 → 🇬🇧  Portuguese to English",
+    translate: "🇬🇧 → 🇵🇹  English to Portuguese",
+    pronunciation: "🗣️  Pronunciation Check",
+    spanish: "🇪🇸 → 🇵🇹  Spanish Connection",
+  };
+
+  return (
+    <div>
+      <button
+        onClick={onBack}
+        style={{
+          background: "none",
+          border: "none",
+          color: COLORS.primary,
+          fontSize: 15,
+          cursor: "pointer",
+          padding: "8px 0",
+          marginBottom: 16,
+          fontWeight: 500,
+        }}
+      >
+        ← Back
+      </button>
+
+      {/* Progress bar */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
+        {challenges.map((_, i) => (
+          <div
+            key={i}
+            style={{
+              flex: 1,
+              height: 6,
+              borderRadius: 3,
+              background:
+                i < currentIdx
+                  ? COLORS.primaryLight
+                  : i === currentIdx
+                  ? COLORS.primary
+                  : COLORS.border,
+              transition: "background 0.3s",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Score and streak */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 20,
+          fontSize: 14,
+          color: COLORS.textLight,
+        }}
+      >
+        <span>
+          Question {currentIdx + 1} of {challenges.length}
+        </span>
+        <div style={{ display: "flex", gap: 16 }}>
+          <span>Score: {score}</span>
+          {streak >= 2 && (
+            <span style={{ color: COLORS.accent, fontWeight: 600 }}>🔥 {streak} streak!</span>
+          )}
+        </div>
+      </div>
+
+      {/* Challenge type badge */}
+      <div
+        style={{
+          fontSize: 12,
+          color: COLORS.textLight,
+          textAlign: "center",
+          marginBottom: 8,
+          fontWeight: 500,
+        }}
+      >
+        {typeLabel[current.type]}
+      </div>
+
+      {/* Question */}
+      <div
+        style={{
+          background: COLORS.card,
+          borderRadius: 16,
+          padding: "24px 20px",
+          textAlign: "center",
+          marginBottom: 20,
+          border: `1px solid ${COLORS.border}`,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+        }}
+      >
+        <h3 style={{ margin: 0, color: COLORS.text, fontSize: 20, lineHeight: 1.4 }}>
+          {current.question}
+        </h3>
+        {!showResult && (
+          <p style={{ margin: "12px 0 0", color: COLORS.spanish, fontSize: 13 }}>
+            💡 Hint — {current.hint}
+          </p>
+        )}
+      </div>
+
+      {/* Options */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {current.options.map((option, i) => {
+          const isCorrect = option === current.correct;
+          const isSelected = option === selected;
+          let bg = COLORS.card;
+          let borderColor = COLORS.border;
+          let textColor = COLORS.text;
+
+          if (showResult) {
+            if (isCorrect) {
+              bg = COLORS.correctBg;
+              borderColor = COLORS.correct;
+              textColor = COLORS.correct;
+            } else if (isSelected && !isCorrect) {
+              bg = COLORS.wrongBg;
+              borderColor = COLORS.wrong;
+              textColor = COLORS.wrong;
+            }
+          }
+
+          return (
+            <button
+              key={i}
+              onClick={() => handleSelect(option)}
+              style={{
+                background: bg,
+                border: `2px solid ${borderColor}`,
+                borderRadius: 12,
+                padding: "14px 18px",
+                fontSize: 16,
+                color: textColor,
+                cursor: selected ? "default" : "pointer",
+                textAlign: "left",
+                fontWeight: isSelected || (showResult && isCorrect) ? 600 : 400,
+                transition: "all 0.2s",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <span
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 14,
+                  background: showResult && isCorrect ? COLORS.correct : showResult && isSelected ? COLORS.wrong : COLORS.primaryFaint,
+                  color: showResult && (isCorrect || isSelected) ? "white" : COLORS.primary,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  flexShrink: 0,
+                }}
+              >
+                {showResult && isCorrect ? "✓" : showResult && isSelected ? "✗" : String.fromCharCode(65 + i)}
+              </span>
+              {option}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Explanation */}
+      {showResult && (
+        <div
+          style={{
+            background: selected === current.correct ? COLORS.correctBg : COLORS.wrongBg,
+            borderRadius: 12,
+            padding: "14px 18px",
+            marginTop: 16,
+            fontSize: 14,
+            lineHeight: 1.5,
+            color: COLORS.text,
+          }}
+        >
+          <strong>{selected === current.correct ? "Muito bem! ✨" : "Not quite! 🤔"}</strong>
+          <br />
+          {current.explanation}
+        </div>
+      )}
+
+      {showResult && (
+        <button
+          onClick={handleNext}
+          style={{
+            width: "100%",
+            background: COLORS.primary,
+            color: "white",
+            border: "none",
+            borderRadius: 12,
+            padding: "14px",
+            fontSize: 16,
+            fontWeight: 600,
+            cursor: "pointer",
+            marginTop: 16,
+          }}
+        >
+          {currentIdx < challenges.length - 1 ? "Next Question →" : "See Results 🎉"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function PatternGuide({ onBack }) {
+  const patterns = [
+    {
+      title: "The H ↔ F Swap",
+      spanish: "hablar, hacer, hijo, hilo",
+      portuguese: "falar, fazer, filho, fio",
+      rule: "Spanish 'h' (silent) often becomes Portuguese 'f'. This is one of the most reliable patterns!",
+    },
+    {
+      title: "The UE → O Rule",
+      spanish: "puerta, cuenta, bueno, fuerte",
+      portuguese: "porta, conta, bom, forte",
+      rule: "Spanish 'ue' diphthong simplifies to 'o' in Portuguese. Works almost every time.",
+    },
+    {
+      title: "The IE → E Rule",
+      spanish: "fiesta, tierra, bien, tiene",
+      portuguese: "festa, terra, bem, tem",
+      rule: "Spanish 'ie' diphthong simplifies to 'e' in Portuguese.",
+    },
+    {
+      title: "The LL → LH Swap",
+      spanish: "calle, caballo, ella, llamar",
+      portuguese: "rua*, cavalo*, ela, chamar",
+      rule: "Spanish 'll' often becomes 'lh' in Portuguese (both ≈ 'ly' sound), though some words diverge entirely (*rua, *cavalo).",
+    },
+    {
+      title: "The Ñ → NH Swap",
+      spanish: "España, señor, año, niño",
+      portuguese: "Espanha, senhor, ano, menino*",
+      rule: "Spanish 'ñ' = Portuguese 'nh'. Same sound, different spelling! (*some words change more)",
+    },
+    {
+      title: "The -CIÓN → -ÇÃO Swap",
+      spanish: "nación, estación, información",
+      portuguese: "nação, estação, informação",
+      rule: "All those Spanish '-ción' words become '-ção' in Portuguese. Thousands of instant cognates!",
+    },
+    {
+      title: "The -DAD → -DADE Swap",
+      spanish: "ciudad, universidad, verdad",
+      portuguese: "cidade, universidade, verdade",
+      rule: "Spanish '-dad' endings become '-dade' in Portuguese. Add an 'e' and you're there!",
+    },
+  ];
+
+  return (
+    <div>
+      <button
+        onClick={onBack}
+        style={{
+          background: "none",
+          border: "none",
+          color: COLORS.primary,
+          fontSize: 15,
+          cursor: "pointer",
+          padding: "8px 0",
+          marginBottom: 12,
+          fontWeight: 500,
+        }}
+      >
+        ← Back
+      </button>
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <div style={{ fontSize: 40, marginBottom: 4 }}>🔑</div>
+        <h2 style={{ margin: 0, color: COLORS.text, fontSize: 24 }}>Spanish → Portuguese</h2>
+        <p style={{ margin: "4px 0 0", color: COLORS.textLight, fontSize: 14 }}>
+          Your secret weapon: predictable patterns between the two languages
+        </p>
+      </div>
+      {patterns.map((p, i) => (
+        <div
+          key={i}
+          style={{
+            background: COLORS.card,
+            borderRadius: 14,
+            padding: "18px 20px",
+            marginBottom: 12,
+            border: `1px solid ${COLORS.border}`,
+          }}
+        >
+          <h3 style={{ margin: "0 0 10px", color: COLORS.primary, fontSize: 17 }}>{p.title}</h3>
+          <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+            <div
+              style={{
+                flex: 1,
+                minWidth: 140,
+                background: COLORS.spanishBg,
+                borderRadius: 8,
+                padding: "8px 12px",
+              }}
+            >
+              <div style={{ fontSize: 11, color: COLORS.spanish, fontWeight: 600, marginBottom: 2 }}>
+                🇪🇸 SPANISH
+              </div>
+              <div style={{ fontSize: 14, color: COLORS.text }}>{p.spanish}</div>
+            </div>
+            <div
+              style={{
+                flex: 1,
+                minWidth: 140,
+                background: COLORS.primaryFaint,
+                borderRadius: 8,
+                padding: "8px 12px",
+              }}
+            >
+              <div style={{ fontSize: 11, color: COLORS.primary, fontWeight: 600, marginBottom: 2 }}>
+                🇵🇹 PORTUGUESE
+              </div>
+              <div style={{ fontSize: 14, color: COLORS.text }}>{p.portuguese}</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 13, color: COLORS.textLight, lineHeight: 1.5 }}>
+            {p.rule}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Main App ────────────────────────────────────────────────────────────────
+
+function PortugueseLearner() {
+  const [view, setView] = useState("home"); // home, lesson, challenge, patterns
+  const [selectedLesson, setSelectedLesson] = useState(null);
+  const [completedLessons, setCompletedLessons] = useState({});
+  const [challengesDone, setChallengesDone] = useState(0);
+
+  const openLesson = (lesson) => {
+    setSelectedLesson(lesson);
+    setView("lesson");
+    setCompletedLessons((prev) => ({ ...prev, [lesson.id]: true }));
+  };
+
+  if (view === "lesson" && selectedLesson) {
+    return (
+      <div style={{ maxWidth: 520, margin: "0 auto", padding: "20px 16px", fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+        <LessonView lesson={selectedLesson} onBack={() => setView("home")} />
+      </div>
+    );
+  }
+
+  if (view === "challenge") {
+    return (
+      <div style={{ maxWidth: 520, margin: "0 auto", padding: "20px 16px", fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+        <ChallengeView
+          onBack={() => {
+            setView("home");
+            setChallengesDone((d) => d + 1);
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (view === "patterns") {
+    return (
+      <div style={{ maxWidth: 520, margin: "0 auto", padding: "20px 16px", fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+        <PatternGuide onBack={() => setView("home")} />
+      </div>
+    );
+  }
+
+  // ─── Home Screen ───────────────────────────────────────────────────────────
+  const progress = Object.keys(completedLessons).length;
+
+  return (
+    <div
+      style={{
+        maxWidth: 520,
+        margin: "0 auto",
+        padding: "20px 16px",
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+        color: COLORS.text,
+      }}
+    >
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <div style={{ fontSize: 18, marginBottom: 4 }}>🇵🇹</div>
+        <h1 style={{ margin: "0 0 4px", fontSize: 26, color: COLORS.primary, fontWeight: 700 }}>
+          Aprende Português
+        </h1>
+        <p style={{ margin: 0, color: COLORS.textLight, fontSize: 14 }}>
+          Holiday Portuguese for Spanish & English speakers
+        </p>
+      </div>
+
+      {/* Progress */}
+      <div
+        style={{
+          background: COLORS.card,
+          borderRadius: 14,
+          padding: "16px 20px",
+          marginBottom: 20,
+          border: `1px solid ${COLORS.border}`,
+          display: "flex",
+          justifyContent: "space-around",
+          textAlign: "center",
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: COLORS.primary }}>{progress}</div>
+          <div style={{ fontSize: 12, color: COLORS.textLight }}>Lessons done</div>
+        </div>
+        <div style={{ width: 1, background: COLORS.border }} />
+        <div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: COLORS.accent }}>{challengesDone}</div>
+          <div style={{ fontSize: 12, color: COLORS.textLight }}>Challenges</div>
+        </div>
+        <div style={{ width: 1, background: COLORS.border }} />
+        <div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: COLORS.spanish }}>
+            {LESSONS.reduce((acc, l) => acc + l.phrases.length, 0)}
+          </div>
+          <div style={{ fontSize: 12, color: COLORS.textLight }}>Total phrases</div>
+        </div>
+      </div>
+
+      {/* Daily Challenge CTA */}
+      <button
+        onClick={() => setView("challenge")}
+        style={{
+          width: "100%",
+          background: `linear-gradient(135deg, ${COLORS.primary}, #1b4332)`,
+          color: "white",
+          border: "none",
+          borderRadius: 14,
+          padding: "20px",
+          marginBottom: 12,
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
+              Daily Challenge 🎯
+            </div>
+            <div style={{ fontSize: 13, opacity: 0.85 }}>
+              5 random questions · test your Portuguese!
+            </div>
+          </div>
+          <div style={{ fontSize: 28 }}>→</div>
+        </div>
+      </button>
+
+      {/* Spanish Patterns shortcut */}
+      <button
+        onClick={() => setView("patterns")}
+        style={{
+          width: "100%",
+          background: COLORS.spanishBg,
+          color: COLORS.spanish,
+          border: `1px solid #ddd6fe`,
+          borderRadius: 14,
+          padding: "16px 20px",
+          marginBottom: 24,
+          cursor: "pointer",
+          textAlign: "left",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 2 }}>
+            🔑 Spanish → Portuguese Patterns
+          </div>
+          <div style={{ fontSize: 13, opacity: 0.8 }}>
+            Your secret weapon: predictable rules between the two
+          </div>
+        </div>
+        <div style={{ fontSize: 20 }}>→</div>
+      </button>
+
+      {/* Lesson Grid */}
+      <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 14 }}>Lessons</h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {LESSONS.map((lesson) => (
+          <button
+            key={lesson.id}
+            onClick={() => openLesson(lesson)}
+            style={{
+              background: COLORS.card,
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: 14,
+              padding: "16px 18px",
+              cursor: "pointer",
+              textAlign: "left",
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              transition: "box-shadow 0.2s",
+            }}
+          >
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 12,
+                background: completedLessons[lesson.id] ? COLORS.primaryFaint : "#f9fafb",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 24,
+                flexShrink: 0,
+              }}
+            >
+              {lesson.icon}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 16, fontWeight: 600, color: COLORS.text }}>{lesson.title}</div>
+              <div style={{ fontSize: 13, color: COLORS.textLight }}>
+                {lesson.subtitle} · {lesson.phrases.length} phrases
+              </div>
+            </div>
+            {completedLessons[lesson.id] && (
+              <span style={{ color: COLORS.correct, fontSize: 18 }}>✓</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Footer tip */}
+      <div
+        style={{
+          textAlign: "center",
+          marginTop: 28,
+          padding: "16px",
+          background: COLORS.accentLight,
+          borderRadius: 12,
+          fontSize: 13,
+          color: COLORS.text,
+          lineHeight: 1.5,
+        }}
+      >
+        <strong>Dica do dia:</strong> Portuguese and Spanish share about 89% of their vocabulary.
+        With your Spanish, you already understand far more Portuguese than you think!
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(PortugueseLearner));
+  </script>
+</body>
+</html>
